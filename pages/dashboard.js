@@ -76,11 +76,12 @@ export default function Dashboard() {
       let fileUrl = null
       if (file) {
         const { data, error } = await supabase.storage
-          .from('submission-files')
-          .upload(
-            `${user.id}/week-${selectedWeek}/${fileName}`,
-            file
-          )
+        .from('submission-files')
+        .upload(
+          `${user.id}/week-${selectedWeek}/${fileName}`,
+          file,
+          { upsert: true }
+        )
 
         if (error) throw error
         fileUrl = data.path
