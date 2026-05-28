@@ -75,13 +75,17 @@ export default function Dashboard() {
       // Upload file if exists
       let fileUrl = null
       if (file) {
+        const filePath = `${user.id}/week-${selectedWeek}/${fileName}`
+
+        // Delete old file first (if exists)
+        await supabase.storage
+          .from('submission-files')
+          .remove([filePath])
+
+        // Then upload new file
         const { data, error } = await supabase.storage
-        .from('submission-files')
-        .upload(
-          `${user.id}/week-${selectedWeek}/${fileName}`,
-          file,
-          { upsert: true }
-        )
+          .from('submission-files')
+          .upload(filePath, file)
 
         if (error) throw error
         fileUrl = data.path
