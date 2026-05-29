@@ -10,10 +10,8 @@ export default function Dashboard() {
   const [file, setFile] = useState(null)
   const [reflection, setReflection] = useState('')
   const [loading, setLoading] = useState(false)
-  const [userName, setUserName] = useState('')
 
   useEffect(() => {
-    // Check auth
     const userId = localStorage.getItem('user_id')
     const userRole = localStorage.getItem('user_role')
     const userEmail = localStorage.getItem('user_email')
@@ -24,25 +22,11 @@ export default function Dashboard() {
     }
 
     setUser({ id: userId, role: userRole, email: userEmail })
-
-    // Fetch user name and submissions
     fetchUserData(userId)
   }, [router])
 
   const fetchUserData = async (userId) => {
     try {
-      // Get user name
-      const { data: userData } = await supabase
-        .from('users')
-        .select('name')
-        .eq('id', userId)
-        .single()
-
-      if (userData) {
-        setUserName(userData.name)
-      }
-
-      // Get submissions
       const { data: subs } = await supabase
         .from('submissions')
         .select('*')
@@ -73,14 +57,11 @@ export default function Dashboard() {
       const fileName = file ? file.name : 'reflection-only'
       const weekNumber = selectedWeek === 'poa' ? 0 : selectedWeek
 
-      // Upload file if exists
       let fileUrl = null
       if (file) {
-        // Simple flat path without nested folders
         const timestamp = Date.now()
         const simpleFileName = `${user.id}-week${weekNumber}-${timestamp}-${fileName}`
         
-        // Upload file directly
         const { data, error } = await supabase.storage
           .from('submission-files')
           .upload(simpleFileName, file)
@@ -89,7 +70,6 @@ export default function Dashboard() {
         fileUrl = simpleFileName
       }
 
-      // Create/update submission
       const { error: submitError } = await supabase
         .from('submissions')
         .upsert({
@@ -107,8 +87,6 @@ export default function Dashboard() {
       setFile(null)
       setReflection('')
       setSelectedWeek(null)
-      
-      // Refresh data
       fetchUserData(user.id)
     } catch (err) {
       alert('Error submitting: ' + err.message)
@@ -126,7 +104,6 @@ export default function Dashboard() {
     setLoading(true)
 
     try {
-      // Delete file from storage if it exists
       const submission = submissions[week === 'poa' ? 0 : week]
       if (submission?.file_url) {
         await supabase.storage
@@ -134,7 +111,6 @@ export default function Dashboard() {
           .remove([submission.file_url])
       }
 
-      // Delete submission from database
       const weekNumber = week === 'poa' ? 0 : week
       const { error } = await supabase
         .from('submissions')
@@ -168,7 +144,6 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-      {/* Header */}
       <div className="bg-white shadow">
         <div className="max-w-6xl mx-auto px-4 py-6 flex justify-between items-center">
           <div>
@@ -187,7 +162,6 @@ export default function Dashboard() {
       </div>
 
       <div className="max-w-6xl mx-auto px-4 py-8">
-        {/* Progress Summary */}
         <div className="bg-white rounded-lg shadow p-6 mb-8">
           <h2 className="text-xl font-bold mb-4">Your Progress</h2>
           <div className="flex items-center justify-between">
@@ -228,9 +202,7 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* POA and Week Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          {/* Plan of Action Card */}
           <div
             onClick={() => setSelectedWeek('poa')}
             className={`p-6 rounded-lg shadow cursor-pointer transition transform hover:scale-105 ${
@@ -252,7 +224,6 @@ export default function Dashboard() {
             )}
           </div>
 
-          {/* Week Cards */}
           {Array.from({ length: 8 }, (_, i) => i + 1).map((week) => {
             const isCompleted = submissions[week]
             return (
@@ -281,7 +252,6 @@ export default function Dashboard() {
           })}
         </div>
 
-        {/* Submission Form */}
         {selectedWeek && (
           <div className="bg-white rounded-lg shadow p-8 max-w-2xl">
             <div className="flex justify-between items-start mb-6">
@@ -293,7 +263,7 @@ export default function Dashboard() {
               </h2>
               {submissions[selectedWeek === 'poa' ? 0 : selectedWeek] && (
                 <button
-                  onClick={() => handleDeleteSubmission(selectedWeek === 'poa' ? 0 : selectedWeek)}
+                  onClick={() => handleDeleteSubmission(selectedWeek)}
                   disabled={loading}
                   className="bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-lg transition disabled:opacity-50"
                 >
