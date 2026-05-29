@@ -88,6 +88,29 @@ export default function Dashboard() {
     setLoading(false)
   }
 
+  const handleDelete = async () => {
+    if (!window.confirm(`Delete Week ${selectedWeek} submission?`)) {
+      return
+    }
+
+    setLoading(true)
+    try {
+      const { error } = await supabase
+        .from('submissions')
+        .delete()
+        .eq('user_id', user.id)
+        .eq('week_number', selectedWeek)
+
+      if (error) throw error
+      alert('Deleted!')
+      setSelectedWeek(null)
+      fetchData(user.id)
+    } catch (err) {
+      alert('Error: ' + err.message)
+    }
+    setLoading(false)
+  }
+
   const handleLogout = () => {
     localStorage.clear()
     router.push('/')
@@ -136,7 +159,19 @@ export default function Dashboard() {
 
         {selectedWeek && (
           <div className="bg-white rounded-lg shadow p-8 max-w-2xl">
-            <h2 className="text-2xl font-bold mb-6">Week {selectedWeek}</h2>
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold">Week {selectedWeek}</h2>
+              {submissions[selectedWeek] && (
+                <button
+                  type="button"
+                  onClick={handleDelete}
+                  disabled={loading}
+                  className="bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-lg"
+                >
+                  Delete
+                </button>
+              )}
+            </div>
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
                 <label className="block text-sm font-medium mb-2">File</label>
