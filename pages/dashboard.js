@@ -76,12 +76,12 @@ export default function Dashboard() {
       let fileUrl = null
       if (file) {
         const filePath = `${user.id}/week-${selectedWeek}/${fileName}`
-
+        
         // Delete old file first (if exists)
         await supabase.storage
           .from('submission-files')
           .remove([filePath])
-
+        
         // Then upload new file
         const { data, error } = await supabase.storage
           .from('submission-files')
@@ -118,39 +118,41 @@ export default function Dashboard() {
 
     setLoading(false)
   }
+
   const handleDeleteSubmission = async (week) => {
-  if (!window.confirm(`Delete Week ${week} submission? This cannot be undone.`)) {
-    return
-  }
-
-  setLoading(true)
-
-  try {
-    // Delete file from storage if it exists
-    const submission = submissions[week]
-    if (submission?.file_url) {
-      await supabase.storage
-        .from('submission-files')
-        .remove([submission.file_url])
+    if (!window.confirm(`Delete Week ${week} submission? This cannot be undone.`)) {
+      return
     }
 
-    // Delete submission from database
-    const { error } = await supabase
-      .from('submissions')
-      .delete()
-      .eq('user_id', user.id)
-      .eq('week_number', week)
+    setLoading(true)
 
-    if (error) throw error
+    try {
+      // Delete file from storage if it exists
+      const submission = submissions[week]
+      if (submission?.file_url) {
+        await supabase.storage
+          .from('submission-files')
+          .remove([submission.file_url])
+      }
 
-    alert('Submission deleted successfully!')
-    fetchUserData(user.id)
-  } catch (err) {
-    alert('Error deleting: ' + err.message)
+      // Delete submission from database
+      const { error } = await supabase
+        .from('submissions')
+        .delete()
+        .eq('user_id', user.id)
+        .eq('week_number', week)
+
+      if (error) throw error
+
+      alert('Submission deleted successfully!')
+      fetchUserData(user.id)
+      setSelectedWeek(null)
+    } catch (err) {
+      alert('Error deleting: ' + err.message)
+    }
+
+    setLoading(false)
   }
-
-  setLoading(false)
-}
 
   const handleLogout = () => {
     localStorage.removeItem('user_id')
@@ -254,27 +256,28 @@ export default function Dashboard() {
               </div>
             )
           })}
-        {selectedWeek && submissions[selectedWeek] && (
-          <div className="mb-4">
-           <button
-            onClick={() => handleDeleteSubmission(selectedWeek)}
-            disabled={loading}
-            className="bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-lg transition"
-           >
-            Delete This Submission
-           </button>
-          </div>
-        )}
+        </div>
 
         {/* Submission Form */}
         {selectedWeek && (
           <div className="bg-white rounded-lg shadow p-8 max-w-2xl">
-            <h2 className="text-2xl font-bold mb-6">
-              Week {selectedWeek} Submission
+            <div className="flex justify-between items-start mb-6">
+              <h2 className="text-2xl font-bold">
+                Week {selectedWeek} Submission
+                {submissions[selectedWeek] && (
+                  <span className="text-green-600 text-lg ml-4">✓ Already submitted</span>
+                )}
+              </h2>
               {submissions[selectedWeek] && (
-                <span className="text-green-600 text-lg ml-4">✓ Already submitted</span>
+                <button
+                  onClick={() => handleDeleteSubmission(selectedWeek)}
+                  disabled={loading}
+                  className="bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-lg transition disabled:opacity-50"
+                >
+                  Delete
+                </button>
               )}
-            </h2>
+            </div>
 
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
