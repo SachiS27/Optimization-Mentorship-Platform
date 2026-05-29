@@ -72,16 +72,21 @@ export default function Dashboard() {
     try {
       const fileName = file ? file.name : 'reflection-only'
       const weekNumber = selectedWeek === 'poa' ? 0 : selectedWeek
+      const folderPath = selectedWeek === 'poa' ? 'poa' : `week-${selectedWeek}`
 
       // Upload file if exists
       let fileUrl = null
       if (file) {
-        const filePath = `${user.id}/week-${weekNumber}/${fileName}`
+        const filePath = `${user.id}/${folderPath}/${fileName}`
         
-        // Delete old file first (if exists)
-        await supabase.storage
-          .from('submission-files')
-          .remove([filePath])
+        // Try to delete old file first (if exists) - ignore errors if it doesn't exist
+        try {
+          await supabase.storage
+            .from('submission-files')
+            .remove([filePath])
+        } catch (err) {
+          // Ignore error if file doesn't exist
+        }
         
         // Then upload new file
         const { data, error } = await supabase.storage
@@ -121,7 +126,8 @@ export default function Dashboard() {
   }
 
   const handleDeleteSubmission = async (week) => {
-    if (!window.confirm(`Delete Week ${week} submission? This cannot be undone.`)) {
+    const isConfirming = week === 0 ? 'Plan of Action' : `Week ${week}`
+    if (!window.confirm(`Delete ${isConfirming} submission? This cannot be undone.`)) {
       return
     }
 
@@ -129,7 +135,7 @@ export default function Dashboard() {
 
     try {
       // Delete file from storage if it exists
-      const submission = submissions[week]
+      const submission = submissions[week === 'poa' ? 0 : week]
       if (submission?.file_url) {
         await supabase.storage
           .from('submission-files')
@@ -137,11 +143,12 @@ export default function Dashboard() {
       }
 
       // Delete submission from database
+      const weekNumber = week === 'poa' ? 0 : week
       const { error } = await supabase
         .from('submissions')
         .delete()
         .eq('user_id', user.id)
-        .eq('week_number', week)
+        .eq('week_number', weekNumber)
 
       if (error) throw error
 
