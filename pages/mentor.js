@@ -234,7 +234,24 @@ export default function MentorDashboard() {
                   <div className="p-6 text-center text-gray-600">Loading...</div>
                 ) : (
                   <div className="p-6">
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                    <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
+                      {/* POA Grid Item */}
+                      <div
+                        className={`p-4 rounded-lg text-center border-2 ${
+                          studentSubmissions[0]
+                            ? 'bg-green-50 border-green-500'
+                            : 'bg-gray-50 border-gray-300'
+                        }`}
+                      >
+                        <p className="font-bold text-gray-800">POA</p>
+                        {studentSubmissions[0] ? (
+                          <p className="text-green-600 text-sm font-semibold">✓</p>
+                        ) : (
+                          <p className="text-gray-400 text-sm">-</p>
+                        )}
+                      </div>
+
+                      {/* Week Grid Items */}
                       {Array.from({ length: 8 }, (_, i) => i + 1).map((week) => {
                         const isSubmitted = studentSubmissions[week]
                         return (
@@ -246,7 +263,7 @@ export default function MentorDashboard() {
                                 : 'bg-gray-50 border-gray-300'
                             }`}
                           >
-                            <p className="font-bold text-gray-800">Week {week}</p>
+                            <p className="font-bold text-gray-800">W{week}</p>
                             {isSubmitted ? (
                               <p className="text-green-600 text-sm font-semibold">✓</p>
                             ) : (
@@ -259,6 +276,63 @@ export default function MentorDashboard() {
 
                     {/* Detailed Submissions */}
                     <div className="space-y-6">
+                      {/* POA Submission */}
+                      {(() => {
+                        const sub = studentSubmissions[0]
+                        return (
+                          <div
+                            key="poa"
+                            className={`p-4 rounded-lg border ${
+                              sub
+                                ? 'bg-green-50 border-green-200'
+                                : 'bg-gray-50 border-gray-200'
+                            }`}
+                          >
+                            <div className="flex justify-between items-start mb-3">
+                              <h3 className="font-bold text-gray-800">Plan of Action</h3>
+                              {sub && (
+                                <span className="text-xs text-gray-600">
+                                  {new Date(sub.submitted_at).toLocaleDateString()}
+                                </span>
+                              )}
+                            </div>
+
+                            {sub ? (
+                              <div className="space-y-3">
+                                {sub.file_name && (
+                                  <div>
+                                    <p className="text-sm text-gray-700 font-semibold mb-1">
+                                      File: {sub.file_name}
+                                    </p>
+                                    <button
+                                      onClick={() => downloadFile(sub.file_url)}
+                                      className="text-sm bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded transition"
+                                    >
+                                      Download
+                                    </button>
+                                  </div>
+                                )}
+                                {sub.reflection_text && (
+                                  <div>
+                                    <p className="text-sm text-gray-700 font-semibold mb-1">
+                                      Reflection:
+                                    </p>
+                                    <p className="text-sm text-gray-700 bg-white p-3 rounded border border-gray-300">
+                                      {sub.reflection_text}
+                                    </p>
+                                  </div>
+                                )}
+                              </div>
+                            ) : (
+                              <p className="text-sm text-gray-600 italic">
+                                Not submitted
+                              </p>
+                            )}
+                          </div>
+                        )
+                      })()}
+
+                      {/* Week Submissions */}
                       {Array.from({ length: 8 }, (_, i) => i + 1).map((week) => {
                         const sub = studentSubmissions[week]
                         return (
