@@ -118,6 +118,39 @@ export default function Dashboard() {
 
     setLoading(false)
   }
+  const handleDeleteSubmission = async (week) => {
+  if (!window.confirm(`Delete Week ${week} submission? This cannot be undone.`)) {
+    return
+  }
+
+  setLoading(true)
+
+  try {
+    // Delete file from storage if it exists
+    const submission = submissions[week]
+    if (submission?.file_url) {
+      await supabase.storage
+        .from('submission-files')
+        .remove([submission.file_url])
+    }
+
+    // Delete submission from database
+    const { error } = await supabase
+      .from('submissions')
+      .delete()
+      .eq('user_id', user.id)
+      .eq('week_number', week)
+
+    if (error) throw error
+
+    alert('Submission deleted successfully!')
+    fetchUserData(user.id)
+  } catch (err) {
+    alert('Error deleting: ' + err.message)
+  }
+
+  setLoading(false)
+}
 
   const handleLogout = () => {
     localStorage.removeItem('user_id')
@@ -221,7 +254,17 @@ export default function Dashboard() {
               </div>
             )
           })}
-        </div>
+        {selectedWeek && submissions[selectedWeek] && (
+          <div className="mb-4">
+           <button
+            onClick={() => handleDeleteSubmission(selectedWeek)}
+            disabled={loading}
+            className="bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-lg transition"
+           >
+            Delete This Submission
+           </button>
+          </div>
+        )}
 
         {/* Submission Form */}
         {selectedWeek && (
