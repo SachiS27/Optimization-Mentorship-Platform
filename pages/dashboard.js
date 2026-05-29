@@ -71,11 +71,12 @@ export default function Dashboard() {
 
     try {
       const fileName = file ? file.name : 'reflection-only'
+      const weekNumber = selectedWeek === 'poa' ? 0 : selectedWeek
 
       // Upload file if exists
       let fileUrl = null
       if (file) {
-        const filePath = `${user.id}/week-${selectedWeek}/${fileName}`
+        const filePath = `${user.id}/week-${weekNumber}/${fileName}`
         
         // Delete old file first (if exists)
         await supabase.storage
@@ -96,7 +97,7 @@ export default function Dashboard() {
         .from('submissions')
         .upsert({
           user_id: user.id,
-          week_number: selectedWeek,
+          week_number: weekNumber,
           file_name: fileName,
           file_url: fileUrl,
           reflection_text: reflection,
@@ -193,10 +194,10 @@ export default function Dashboard() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-600">
-                Completed Weeks: <span className="font-bold text-blue-600 text-lg">{completedWeeks}/{totalWeeks}</span>
+                Completed Submissions: <span className="font-bold text-blue-600 text-lg">{completedWeeks}/{totalWeeks + 1}</span>
               </p>
               <p className="text-gray-600 text-sm mt-2">
-                Keep going! You're making great progress.
+                (Plan of Action + 8 Weeks)
               </p>
             </div>
             <div className="w-32 h-32 flex items-center justify-center">
@@ -217,19 +218,42 @@ export default function Dashboard() {
                     fill="none"
                     stroke="#3b82f6"
                     strokeWidth="8"
-                    strokeDasharray={`${(completedWeeks / totalWeeks) * 276.3} 276.3`}
+                    strokeDasharray={`${(completedWeeks / (totalWeeks + 1)) * 276.3} 276.3`}
                   />
                 </svg>
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="text-2xl font-bold">{Math.round((completedWeeks / totalWeeks) * 100)}%</span>
+                  <span className="text-2xl font-bold">{Math.round((completedWeeks / (totalWeeks + 1)) * 100)}%</span>
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Week Cards */}
+        {/* POA and Week Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          {/* Plan of Action Card */}
+          <div
+            onClick={() => setSelectedWeek('poa')}
+            className={`p-6 rounded-lg shadow cursor-pointer transition transform hover:scale-105 ${
+              submissions[0]
+                ? 'bg-green-50 border-2 border-green-500'
+                : 'bg-white border-2 border-gray-200'
+            } ${selectedWeek === 'poa' ? 'ring-4 ring-blue-400' : ''}`}
+          >
+            <h3 className="text-lg font-bold text-gray-800">Plan of Action</h3>
+            {submissions[0] ? (
+              <p className="text-green-600 font-semibold text-sm mt-2">✓ Submitted</p>
+            ) : (
+              <p className="text-gray-600 text-sm mt-2">Not submitted</p>
+            )}
+            {submissions[0] && submissions[0].submitted_at && (
+              <p className="text-gray-500 text-xs mt-1">
+                {new Date(submissions[0].submitted_at).toLocaleDateString()}
+              </p>
+            )}
+          </div>
+
+          {/* Week Cards */}
           {Array.from({ length: 8 }, (_, i) => i + 1).map((week) => {
             const isCompleted = submissions[week]
             return (
@@ -263,14 +287,14 @@ export default function Dashboard() {
           <div className="bg-white rounded-lg shadow p-8 max-w-2xl">
             <div className="flex justify-between items-start mb-6">
               <h2 className="text-2xl font-bold">
-                Week {selectedWeek} Submission
-                {submissions[selectedWeek] && (
+                {selectedWeek === 'poa' ? 'Plan of Action' : `Week ${selectedWeek} Submission`}
+                {submissions[selectedWeek === 'poa' ? 0 : selectedWeek] && (
                   <span className="text-green-600 text-lg ml-4">✓ Already submitted</span>
                 )}
               </h2>
-              {submissions[selectedWeek] && (
+              {submissions[selectedWeek === 'poa' ? 0 : selectedWeek] && (
                 <button
-                  onClick={() => handleDeleteSubmission(selectedWeek)}
+                  onClick={() => handleDeleteSubmission(selectedWeek === 'poa' ? 0 : selectedWeek)}
                   disabled={loading}
                   className="bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-lg transition disabled:opacity-50"
                 >
