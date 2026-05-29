@@ -72,29 +72,21 @@ export default function Dashboard() {
     try {
       const fileName = file ? file.name : 'reflection-only'
       const weekNumber = selectedWeek === 'poa' ? 0 : selectedWeek
-      const folderPath = selectedWeek === 'poa' ? 'poa' : `week-${selectedWeek}`
 
       // Upload file if exists
       let fileUrl = null
       if (file) {
-        const filePath = `${user.id}/${folderPath}/${fileName}`
+        // Simple flat path without nested folders
+        const timestamp = Date.now()
+        const simpleFileName = `${user.id}-week${weekNumber}-${timestamp}-${fileName}`
         
-        // Try to delete old file first (if exists) - ignore errors if it doesn't exist
-        try {
-          await supabase.storage
-            .from('submission-files')
-            .remove([filePath])
-        } catch (err) {
-          // Ignore error if file doesn't exist
-        }
-        
-        // Then upload new file
+        // Upload file directly
         const { data, error } = await supabase.storage
           .from('submission-files')
-          .upload(filePath, file)
+          .upload(simpleFileName, file)
 
         if (error) throw error
-        fileUrl = data.path
+        fileUrl = simpleFileName
       }
 
       // Create/update submission
