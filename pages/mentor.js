@@ -235,15 +235,7 @@ export default function MentorDashboard() {
                 ) : (
                   <div className="p-6">
                     <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
-                      {/* POA Grid Item */}
-                      <div
-                        className={`p-4 rounded-lg text-center border-2 ${
-                          studentSubmissions[0]
-                            ? 'bg-green-50 border-green-500'
-                            : 'bg-gray-50 border-gray-300'
-                        }`}
-                      >
-                        <p className="font-bold text-gray-800">POA</p>
+                      
                         {studentSubmissions[0] ? (
                           <p className="text-green-600 text-sm font-semibold">✓</p>
                         ) : (
@@ -276,20 +268,7 @@ export default function MentorDashboard() {
 
                     {/* Detailed Submissions */}
                     <div className="space-y-6">
-                      {/* POA Submission */}
-                      {(() => {
-                        const sub = studentSubmissions[0]
-                        return (
-                          <div
-                            key="poa"
-                            className={`p-4 rounded-lg border ${
-                              sub
-                                ? 'bg-green-50 border-green-200'
-                                : 'bg-gray-50 border-gray-200'
-                            }`}
-                          >
-                            <div className="flex justify-between items-start mb-3">
-                              <h3 className="font-bold text-gray-800">Plan of Action</h3>
+                      
                               {sub && (
                                 <span className="text-xs text-gray-600">
                                   {new Date(sub.submitted_at).toLocaleDateString()}
