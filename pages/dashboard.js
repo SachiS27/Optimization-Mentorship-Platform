@@ -183,13 +183,28 @@ export default function Dashboard() {
                   <div>
                     <p className="text-sm font-semibold mb-2">File: {submissions[selectedWeek].file_name}</p>
                     <button
-                      onClick={() => {
-                        const url = submissions[selectedWeek].file_url
-                        window.open(url, '_blank')
+                      onClick={async () => {
+                        try {
+                          const { data } = await supabase.storage
+                            .from('submission-files')
+                            .download(submissions[selectedWeek].file_url)
+                          
+                          if (data) {
+                            const url = window.URL.createObjectURL(new Blob([data]))
+                            const link = document.createElement('a')
+                            link.href = url
+                            link.setAttribute('download', submissions[selectedWeek].file_name)
+                            document.body.appendChild(link)
+                            link.click()
+                            link.parentNode.removeChild(link)
+                          }
+                        } catch (err) {
+                          alert('Error downloading file: ' + err.message)
+                        }
                       }}
                       className="text-sm bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg"
                     >
-                      View File
+                      Download File
                     </button>
                   </div>
                 )}
