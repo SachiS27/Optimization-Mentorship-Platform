@@ -172,24 +172,68 @@ export default function Dashboard() {
                 </button>
               )}
             </div>
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div>
-                <label className="block text-sm font-medium mb-2">File</label>
-                <input type="file" onChange={(e) => setFile(e.target.files?.[0])} className="w-full px-4 py-2 border rounded-lg" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-2">Reflection</label>
-                <textarea value={reflection} onChange={(e) => setReflection(e.target.value)} className="w-full h-32 px-4 py-2 border rounded-lg" />
-              </div>
-              <div className="flex gap-4">
-                <button type="submit" disabled={loading} className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg">
-                  {loading ? 'Submitting...' : 'Submit'}
+
+            {submissions[selectedWeek] ? (
+              <div className="space-y-6 mb-6">
+                <div className="bg-green-50 border border-green-200 p-4 rounded-lg">
+                  <p className="text-sm text-gray-600">Submitted on {new Date(submissions[selectedWeek].submitted_at).toLocaleDateString()}</p>
+                </div>
+                
+                {submissions[selectedWeek].file_name && (
+                  <div>
+                    <p className="text-sm font-semibold mb-2">File: {submissions[selectedWeek].file_name}</p>
+                    <button
+                      onClick={() => {
+                        const url = submissions[selectedWeek].file_url
+                        window.open(url, '_blank')
+                      }}
+                      className="text-sm bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg"
+                    >
+                      View File
+                    </button>
+                  </div>
+                )}
+
+                {submissions[selectedWeek].reflection_text && (
+                  <div>
+                    <p className="text-sm font-semibold mb-2">Your Reflection:</p>
+                    <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                      <p className="text-sm text-gray-700">{submissions[selectedWeek].reflection_text}</p>
+                    </div>
+                  </div>
+                )}
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setFile(null)
+                    setReflection('')
+                  }}
+                  className="w-full bg-gray-300 hover:bg-gray-400 text-gray-800 py-2 rounded-lg"
+                >
+                  Edit Submission
                 </button>
-                <button type="button" onClick={() => setSelectedWeek(null)} className="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 py-2 rounded-lg">
-                  Cancel
-                </button>
               </div>
-            </form>
+            ) : (
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <div>
+                  <label className="block text-sm font-medium mb-2">File</label>
+                  <input type="file" onChange={(e) => setFile(e.target.files?.[0])} className="w-full px-4 py-2 border rounded-lg" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Reflection</label>
+                  <textarea value={reflection} onChange={(e) => setReflection(e.target.value)} className="w-full h-32 px-4 py-2 border rounded-lg" />
+                </div>
+                <div className="flex gap-4">
+                  <button type="submit" disabled={loading} className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg">
+                    {loading ? 'Submitting...' : 'Submit'}
+                  </button>
+                  <button type="button" onClick={() => setSelectedWeek(null)} className="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 py-2 rounded-lg">
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            )}
           </div>
         )}
       </div>
