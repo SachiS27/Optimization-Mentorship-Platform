@@ -28,13 +28,20 @@ export default function MentorDashboard() {
     }
 
     fetchAllData()
+
+    // Auto-refresh every 30 seconds to detect new submissions
+    const interval = setInterval(() => {
+      fetchAllData(true)
+    }, 30000)
+
+    return () => clearInterval(interval)
   }, [router])
 
   const mentorName = typeof window !== 'undefined' ? localStorage.getItem('user_name') || 'Mentor' : 'Mentor'
 
-  const fetchAllData = async () => {
+  const fetchAllData = async (isRefresh = false) => {
     try {
-      setLoading(true)
+      if (!isRefresh) setLoading(true)
 
       const { data: studentsData } = await supabase
         .from('users')
