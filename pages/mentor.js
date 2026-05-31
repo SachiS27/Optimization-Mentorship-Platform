@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/router'
 import { supabase } from '../lib/supabase'
+import { isSubmissionViewed } from '../lib/notifications'
 import DarkModeToggle from '../components/DarkModeToggle'
 import Analytics from '../components/Analytics'
 import MentorContent from '../components/MentorContent'
@@ -283,7 +284,12 @@ export default function MentorDashboard() {
                       {[1, 2, 3, 4, 5, 6, 7, 8].map((week) => (
                         <td key={week} className="px-4 py-4 text-center">
                           {submissions[week] ? (
-                            <span className="text-green-600 dark:text-green-400 font-bold">✓</span>
+                            <span className="relative inline-flex items-center">
+                              {!isSubmissionViewed(student.id, week) && (
+                                <span className="absolute -top-2 -left-2 w-2 h-2 bg-blue-500 rounded-full"></span>
+                              )}
+                              <span className="text-green-600 dark:text-green-400 font-bold">✓</span>
+                            </span>
                           ) : (
                             <span className="text-gray-400 dark:text-gray-600">-</span>
                           )}
