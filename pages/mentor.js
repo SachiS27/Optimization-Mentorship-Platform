@@ -4,13 +4,18 @@ import { supabase } from '../lib/supabase'
 import DarkModeToggle from '../components/DarkModeToggle'
 import Analytics from '../components/Analytics'
 import MentorContent from '../components/MentorContent'
+import { useToast } from '../components/Toast'
 
 export default function MentorDashboard() {
   const router = useRouter()
+  const toast = useToast()
   const [students, setStudents] = useState([])
   const [allSubmissions, setAllSubmissions] = useState({})
+  const [feedbacks, setFeedbacks] = useState({})
   const [selectedStudent, setSelectedStudent] = useState(null)
   const [studentSubmissions, setStudentSubmissions] = useState({})
+  const [studentFeedbacks, setStudentFeedbacks] = useState({})
+  const [feedbackDrafts, setFeedbackDrafts] = useState({})
   const [loading, setLoading] = useState(false)
   const [view, setView] = useState('summary')
 
@@ -53,6 +58,20 @@ export default function MentorDashboard() {
         })
         setAllSubmissions(map)
       }
+
+      // Fetch all feedbacks
+      const { data: feedbackData } = await supabase
+        .from('submission_feedback')
+        .select('*')
+
+      if (feedbackData) {
+        const map = {}
+        feedbackData.forEach((fb) => {
+          const key = `${fb.user_id}_${fb.week_number}`
+          map[key] = fb
+        })
+        setFeedbacks(map)
+      }
     } catch (err) {
       console.error('Error:', err)
     } finally {
@@ -63,11 +82,64 @@ export default function MentorDashboard() {
   const handleSelectStudent = (student) => {
     setSelectedStudent(student)
     setStudentSubmissions(allSubmissions[student.id] || {})
+    // Load this student's feedbacks
+    const fbMap = {}
+    Object.entries(feedbacks).forEach(([key, fb]) => {
+      if (fb.user_id === student.id) {
+        fbMap[fb.week_number] = fb
+      }
+    })
+    setStudentFeedbacks(fbMap)
+  }
+
+  const handleSaveFeedback = async (userId, weekNumber) => {
+    const key = `${userId}_${weekNumber}`
+    const draft = feedbackDrafts[key]
+    if (!draft || !draft.trim()) {
+      toast('Please write a comment first', 'error')
+      return
+    }
+
+    try {
+      const existing = feedbacks[key]
+
+      if (existing) {
+        // Update existing
+        const { error } = await supabase
+          .from('submission_feedback')
+          .update({ comment: draft, updated_at: new Date().toISOString() })
+          .eq('id', existing.id)
+
+        if (error) throw error
+      } else {
+        // Insert new
+        const { error } = await supabase
+          .from('submission_feedback')
+          .insert({
+            user_id: userId,
+            week_number: weekNumber,
+            comment: draft,
+          })
+
+        if (error) throw error
+      }
+
+      toast(`Feedback saved for Week ${weekNumber}`, 'success')
+      // Clear draft
+      setFeedbackDrafts((prev) => {
+        const next = { ...prev }
+        delete next[key]
+        return next
+      })
+      fetchAllData()
+    } catch (err) {
+      toast('Error saving feedback: ' + err.message, 'error')
+    }
   }
 
   const downloadFile = async (fileUrl) => {
     if (!fileUrl) {
-      alert('No file')
+      toast('No file to download', 'error')
       return
     }
 
@@ -85,8 +157,9 @@ export default function MentorDashboard() {
       document.body.appendChild(link)
       link.click()
       link.parentChild?.removeChild(link)
+      toast('Downloaded!', 'success')
     } catch (err) {
-      alert('Error: ' + err.message)
+      toast('Error: ' + err.message, 'error')
     }
   }
 
@@ -286,10 +359,14 @@ export default function MentorDashboard() {
                       ))}
                     </div>
 
-                    {/* Submission details */}
+                    {/* Submission details with feedback */}
                     <div className="space-y-4">
                       {[1, 2, 3, 4, 5, 6, 7, 8].map((week) => {
                         const sub = studentSubmissions[week]
+                        const fbKey = `${selectedStudent.id}_${week}`
+                        const existingFeedback = feedbacks[fbKey]
+                        const draftValue = feedbackDrafts[fbKey] ?? (existingFeedback?.comment || '')
+
                         return (
                           <div
                             key={week}
@@ -309,7 +386,7 @@ export default function MentorDashboard() {
                             </div>
 
                             {sub ? (
-                              <div className="space-y-2">
+                              <div className="space-y-3">
                                 {sub.file_name && (
                                   <div>
                                     <p className="text-sm text-gray-700 dark:text-gray-300 font-semibold">File: {sub.file_name}</p>
@@ -324,11 +401,39 @@ export default function MentorDashboard() {
                                 {sub.reflection_text && (
                                   <div>
                                     <p className="text-sm text-gray-700 dark:text-gray-300 font-semibold">Reflection:</p>
-                                    <p className="text-sm text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 p-2 rounded border border-gray-300 dark:border-gray-600 mt-1 transition-colors duration-300">
+                                    <p className="text-sm text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 p-2 rounded border border-gray-300 dark:border-gray-600 mt-1">
                                       {sub.reflection_text}
                                     </p>
                                   </div>
                                 )}
+
+                                {/* Feedback section */}
+                                <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
+                                  <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                                    💬 Your Feedback
+                                    {existingFeedback && (
+                                      <span className="text-xs text-gray-400 dark:text-gray-500 ml-2 font-normal">
+                                        Last edited {new Date(existingFeedback.updated_at || existingFeedback.created_at).toLocaleDateString()}
+                                      </span>
+                                    )}
+                                  </p>
+                                  <textarea
+                                    value={draftValue}
+                                    onChange={(e) => {
+                                      const key = `${selectedStudent.id}_${week}`
+                                      setFeedbackDrafts((prev) => ({ ...prev, [key]: e.target.value }))
+                                    }}
+                                    placeholder="Write feedback for this submission..."
+                                    rows={3}
+                                    className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 transition-all duration-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                  />
+                                  <button
+                                    onClick={() => handleSaveFeedback(selectedStudent.id, week)}
+                                    className="mt-2 text-sm bg-green-600 hover:bg-green-700 text-white font-semibold px-4 py-1.5 rounded-lg transition-all duration-200"
+                                  >
+                                    {existingFeedback ? 'Update Feedback' : 'Post Feedback'}
+                                  </button>
+                                </div>
                               </div>
                             ) : (
                               <p className="text-sm text-gray-500 dark:text-gray-400">Not submitted</p>

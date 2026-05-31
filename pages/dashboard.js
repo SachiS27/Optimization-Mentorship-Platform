@@ -13,6 +13,7 @@ export default function Dashboard() {
   const [submissions, setSubmissions] = useState({})
   const [weeklyContent, setWeeklyContent] = useState({})
   const [viewedContent, setViewedContent] = useState(new Set())
+  const [feedbacks, setFeedbacks] = useState({})
   const [selectedWeek, setSelectedWeek] = useState(null)
   const [file, setFile] = useState(null)
   const [reflection, setReflection] = useState('')
@@ -72,6 +73,20 @@ export default function Dashboard() {
 
       if (viewsData) {
         setViewedContent(new Set(viewsData.map((v) => v.content_id)))
+      }
+
+      // Fetch feedback for this student
+      const { data: feedbackData } = await supabase
+        .from('submission_feedback')
+        .select('*')
+        .eq('user_id', userId)
+
+      if (feedbackData) {
+        const fbMap = {}
+        feedbackData.forEach((fb) => {
+          fbMap[fb.week_number] = fb
+        })
+        setFeedbacks(fbMap)
       }
     } catch (err) {
       console.error(err)
@@ -370,9 +385,14 @@ export default function Dashboard() {
             >
               <div className="flex items-center justify-between">
                 <h3 className="font-bold text-gray-900 dark:text-white">Week {week}</h3>
-                {week === currentWeek && !submissions[week] && (
-                  <span className="text-xs bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 px-2 py-0.5 rounded-full font-semibold">Current</span>
-                )}
+                <div className="flex items-center gap-1">
+                  {feedbacks[week] && (
+                    <span className="text-xs bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 px-2 py-0.5 rounded-full font-semibold">💬</span>
+                  )}
+                  {week === currentWeek && !submissions[week] && (
+                    <span className="text-xs bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 px-2 py-0.5 rounded-full font-semibold">Current</span>
+                  )}
+                </div>
               </div>
               <p className={`text-sm mt-2 ${
                 submissions[week] ? 'text-green-600 dark:text-green-400' :
@@ -449,6 +469,24 @@ export default function Dashboard() {
                     <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg border border-gray-200 dark:border-gray-600 transition-colors duration-300">
                       <p className="text-sm text-gray-700 dark:text-gray-300">{submissions[selectedWeek].reflection_text}</p>
                     </div>
+                  </div>
+                )}
+
+                {/* Mentor Feedback */}
+                {feedbacks[selectedWeek] ? (
+                  <div className="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 p-4 rounded-lg">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-base">💬</span>
+                      <p className="text-sm font-semibold text-purple-700 dark:text-purple-300">Feedback from Mentor</p>
+                    </div>
+                    <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">{feedbacks[selectedWeek].comment}</p>
+                    <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">
+                      {new Date(feedbacks[selectedWeek].updated_at || feedbacks[selectedWeek].created_at).toLocaleDateString()}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 p-4 rounded-lg text-center">
+                    <p className="text-sm text-gray-400 dark:text-gray-500">No feedback yet — check back later</p>
                   </div>
                 )}
 

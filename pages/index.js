@@ -124,17 +124,6 @@ export default function Login() {
           </button>
         </form>
 
-        <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
-          <p className="text-sm text-gray-500 dark:text-gray-400 text-center">
-            Demo credentials:
-          </p>
-          <p className="text-xs text-gray-400 dark:text-gray-500 text-center mt-2">
-            Mentor: mentor@program.in / mentor123
-          </p>
-          <p className="text-xs text-gray-400 dark:text-gray-500 text-center">
-            Student: student1@program.in / pass123
-          </p>
-        </div>
       </div>
     </div>
   )
