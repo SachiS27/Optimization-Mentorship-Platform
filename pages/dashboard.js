@@ -23,13 +23,14 @@ export default function Dashboard() {
     const userId = localStorage.getItem('user_id')
     const userRole = localStorage.getItem('user_role')
     const userEmail = localStorage.getItem('user_email')
+    const userName = localStorage.getItem('user_name')
 
     if (!userId || userRole !== 'student') {
       router.push('/')
       return
     }
 
-    setUser({ id: userId, role: userRole, email: userEmail })
+    setUser({ id: userId, role: userRole, email: userEmail, name: userName })
     fetchData(userId)
   }, [router])
 
@@ -216,7 +217,7 @@ export default function Dashboard() {
       <div className="bg-white dark:bg-gray-800 shadow transition-colors duration-300">
         <div className="max-w-6xl mx-auto px-4 py-6 flex justify-between items-center">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Welcome</h1>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Welcome, {user.name || 'Student'} 👋</h1>
             <p className="text-gray-500 dark:text-gray-400">{user.email}</p>
           </div>
           <div className="flex items-center gap-4">

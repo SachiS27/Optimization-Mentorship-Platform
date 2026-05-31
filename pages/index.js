@@ -37,6 +37,7 @@ export default function Login() {
       localStorage.setItem('user_id', users.id)
       localStorage.setItem('user_role', users.role)
       localStorage.setItem('user_email', users.email)
+      localStorage.setItem('user_name', users.name)
 
       if (users.role === 'mentor') {
         router.push('/mentor')

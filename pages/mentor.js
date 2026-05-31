@@ -24,6 +24,8 @@ export default function MentorDashboard() {
     fetchAllData()
   }, [router])
 
+  const mentorName = typeof window !== 'undefined' ? localStorage.getItem('user_name') || 'Mentor' : 'Mentor'
+
   const fetchAllData = async () => {
     try {
       setLoading(true)
@@ -99,8 +101,8 @@ export default function MentorDashboard() {
       <div className="bg-white dark:bg-gray-800 shadow transition-colors duration-300">
         <div className="max-w-7xl mx-auto px-4 py-6 flex justify-between items-center">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Mentor Dashboard</h1>
-            <p className="text-gray-500 dark:text-gray-400">Multi-Echelon Optimization</p>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Welcome, {mentorName} 👋</h1>
+            <p className="text-gray-500 dark:text-gray-400">Mentor Dashboard · Multi-Echelon Optimization</p>
           </div>
           <div className="flex items-center gap-4">
             <DarkModeToggle />
