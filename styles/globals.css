@@ -13,9 +13,68 @@ html {
 }
 
 body {
-  @apply bg-gray-50 text-gray-900;
+  @apply bg-gray-50 text-gray-900 transition-colors duration-300;
+}
+
+/* Dark mode body */
+.dark body {
+  @apply bg-gray-900 text-gray-100;
 }
 
 input, textarea, select {
   font: inherit;
+}
+
+/* Fade-in animation */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.4s ease-out forwards;
+}
+
+/* Staggered children fade-in */
+.animate-fade-in-stagger > * {
+  opacity: 0;
+  animation: fadeIn 0.4s ease-out forwards;
+}
+
+.animate-fade-in-stagger > *:nth-child(1) { animation-delay: 0ms; }
+.animate-fade-in-stagger > *:nth-child(2) { animation-delay: 60ms; }
+.animate-fade-in-stagger > *:nth-child(3) { animation-delay: 120ms; }
+.animate-fade-in-stagger > *:nth-child(4) { animation-delay: 180ms; }
+.animate-fade-in-stagger > *:nth-child(5) { animation-delay: 240ms; }
+.animate-fade-in-stagger > *:nth-child(6) { animation-delay: 300ms; }
+.animate-fade-in-stagger > *:nth-child(7) { animation-delay: 360ms; }
+.animate-fade-in-stagger > *:nth-child(8) { animation-delay: 420ms; }
+
+/* Smooth card hover */
+.card-hover {
+  @apply transition-all duration-300 ease-in-out;
+}
+
+.card-hover:hover {
+  @apply -translate-y-1 shadow-lg;
+}
+
+/* Custom scrollbar for dark mode */
+.dark ::-webkit-scrollbar {
+  width: 8px;
+}
+
+.dark ::-webkit-scrollbar-track {
+  background: #1f2937;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #4b5563;
+  border-radius: 4px;
 }

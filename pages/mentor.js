@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/router'
 import { supabase } from '../lib/supabase'
+import DarkModeToggle from '../components/DarkModeToggle'
+import Analytics from '../components/Analytics'
+import MentorContent from '../components/MentorContent'
 
 export default function MentorDashboard() {
   const router = useRouter()
@@ -91,59 +94,86 @@ export default function MentorDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-      <div className="bg-white shadow">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 transition-colors duration-300">
+      {/* Header */}
+      <div className="bg-white dark:bg-gray-800 shadow transition-colors duration-300">
         <div className="max-w-7xl mx-auto px-4 py-6 flex justify-between items-center">
           <div>
-            <h1 className="text-2xl font-bold text-gray-800">Mentor Dashboard</h1>
-            <p className="text-gray-600">Multi-Echelon Optimization</p>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Mentor Dashboard</h1>
+            <p className="text-gray-500 dark:text-gray-400">Multi-Echelon Optimization</p>
           </div>
-          <button
-            onClick={handleLogout}
-            className="bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-6 rounded-lg"
-          >
-            Log Out
-          </button>
+          <div className="flex items-center gap-4">
+            <DarkModeToggle />
+            <button
+              onClick={handleLogout}
+              className="bg-red-600 hover:bg-red-700 active:bg-red-800 text-white font-semibold py-2 px-6 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg"
+            >
+              Log Out
+            </button>
+          </div>
         </div>
       </div>
 
       <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="flex gap-4 mb-8">
-          <button
-            onClick={() => setView('summary')}
-            className={`px-6 py-2 rounded-lg font-semibold ${
-              view === 'summary'
-                ? 'bg-blue-600 text-white'
-                : 'bg-white text-gray-800 border border-gray-300'
-            }`}
-          >
-            Summary View
-          </button>
-          <button
-            onClick={() => setView('detail')}
-            className={`px-6 py-2 rounded-lg font-semibold ${
-              view === 'detail'
-                ? 'bg-blue-600 text-white'
-                : 'bg-white text-gray-800 border border-gray-300'
-            }`}
-          >
-            Student View
-          </button>
+        {/* View Tabs */}
+        <div className="flex gap-3 mb-8 animate-fade-in">
+          {[
+            { key: 'summary', label: 'Summary View' },
+            { key: 'detail', label: 'Student View' },
+            { key: 'analytics', label: '📊 Analytics' },
+            { key: 'content', label: '📚 Content' },
+          ].map((tab) => (
+            <button
+              key={tab.key}
+              onClick={() => setView(tab.key)}
+              className={`px-6 py-2.5 rounded-lg font-semibold transition-all duration-200 ${
+                view === tab.key
+                  ? 'bg-blue-600 text-white shadow-md'
+                  : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
         </div>
 
-        {view === 'summary' ? (
-          <div className="bg-white rounded-lg shadow overflow-x-auto">
+        {/* Loading State */}
+        {loading && (
+          <div className="flex items-center justify-center py-20">
+            <div className="flex items-center gap-3 text-gray-500 dark:text-gray-400">
+              <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+              </svg>
+              Loading data...
+            </div>
+          </div>
+        )}
+
+        {/* Analytics View */}
+        {view === 'analytics' && !loading && (
+          <Analytics students={students} allSubmissions={allSubmissions} />
+        )}
+
+        {/* Content View */}
+        {view === 'content' && (
+          <MentorContent />
+        )}
+
+        {/* Summary View */}
+        {view === 'summary' && !loading && (
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow overflow-x-auto animate-fade-in transition-colors duration-300">
             <table className="w-full">
               <thead>
-                <tr className="bg-gray-100 border-b border-gray-300">
-                  <th className="px-6 py-4 text-left font-semibold text-gray-800">Student</th>
-                  <th className="px-6 py-4 text-center font-semibold text-gray-800">Email</th>
+                <tr className="bg-gray-100 dark:bg-gray-700 border-b border-gray-300 dark:border-gray-600">
+                  <th className="px-6 py-4 text-left font-semibold text-gray-800 dark:text-gray-200">Student</th>
+                  <th className="px-6 py-4 text-center font-semibold text-gray-800 dark:text-gray-200">Email</th>
                   {[1, 2, 3, 4, 5, 6, 7, 8].map((week) => (
-                    <th key={week} className="px-4 py-4 text-center font-semibold text-gray-800">
+                    <th key={week} className="px-4 py-4 text-center font-semibold text-gray-800 dark:text-gray-200">
                       W{week}
                     </th>
                   ))}
-                  <th className="px-6 py-4 text-center font-semibold text-gray-800">Progress</th>
+                  <th className="px-6 py-4 text-center font-semibold text-gray-800 dark:text-gray-200">Progress</th>
                 </tr>
               </thead>
               <tbody>
@@ -153,32 +183,43 @@ export default function MentorDashboard() {
                   const percentage = Math.round((completed / 8) * 100)
 
                   return (
-                    <tr key={student.id} className="border-b border-gray-200 hover:bg-blue-50">
+                    <tr key={student.id} className="border-b border-gray-200 dark:border-gray-700 hover:bg-blue-50 dark:hover:bg-gray-700 transition-colors duration-150">
                       <td className="px-6 py-4">
                         <button
                           onClick={() => {
                             handleSelectStudent(student)
                             setView('detail')
                           }}
-                          className="text-blue-600 hover:text-blue-800 font-semibold cursor-pointer"
+                          className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-semibold cursor-pointer transition-colors duration-200"
                         >
                           {student.name}
                         </button>
                       </td>
-                      <td className="px-6 py-4 text-center text-sm text-gray-600">{student.email}</td>
+                      <td className="px-6 py-4 text-center text-sm text-gray-600 dark:text-gray-400">{student.email}</td>
                       {[1, 2, 3, 4, 5, 6, 7, 8].map((week) => (
                         <td key={week} className="px-4 py-4 text-center">
                           {submissions[week] ? (
-                            <span className="text-green-600 font-bold">✓</span>
+                            <span className="text-green-600 dark:text-green-400 font-bold">✓</span>
                           ) : (
-                            <span className="text-gray-400">-</span>
+                            <span className="text-gray-400 dark:text-gray-600">-</span>
                           )}
                         </td>
                       ))}
                       <td className="px-6 py-4 text-center">
-                        <span className={`font-semibold ${percentage === 100 ? 'text-green-600' : 'text-gray-600'}`}>
-                          {percentage}%
-                        </span>
+                        <div className="flex items-center justify-center gap-2">
+                          <div className="w-16 bg-gray-200 dark:bg-gray-600 rounded-full h-2">
+                            <div
+                              className="h-2 rounded-full transition-all duration-500"
+                              style={{
+                                width: `${percentage}%`,
+                                backgroundColor: percentage === 100 ? '#22C55E' : '#3B82F6',
+                              }}
+                            />
+                          </div>
+                          <span className={`font-semibold text-sm ${percentage === 100 ? 'text-green-600 dark:text-green-400' : 'text-gray-600 dark:text-gray-400'}`}>
+                            {percentage}%
+                          </span>
+                        </div>
                       </td>
                     </tr>
                   )
@@ -186,24 +227,27 @@ export default function MentorDashboard() {
               </tbody>
             </table>
           </div>
-        ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        )}
+
+        {/* Student Detail View */}
+        {view === 'detail' && !loading && (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 animate-fade-in">
             <div className="lg:col-span-1">
-              <div className="bg-white rounded-lg shadow">
-                <div className="p-6 border-b border-gray-200">
-                  <h2 className="text-xl font-bold text-gray-800">Students ({students.length})</h2>
+              <div className="bg-white dark:bg-gray-800 rounded-xl shadow transition-colors duration-300">
+                <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+                  <h2 className="text-xl font-bold text-gray-900 dark:text-white">Students ({students.length})</h2>
                 </div>
                 <div className="overflow-y-auto max-h-96">
                   {students.map((student) => (
                     <div
                       key={student.id}
                       onClick={() => handleSelectStudent(student)}
-                      className={`p-4 border-b border-gray-200 cursor-pointer hover:bg-blue-50 ${
-                        selectedStudent?.id === student.id ? 'bg-blue-100' : ''
+                      className={`p-4 border-b border-gray-200 dark:border-gray-700 cursor-pointer hover:bg-blue-50 dark:hover:bg-gray-700 transition-colors duration-150 ${
+                        selectedStudent?.id === student.id ? 'bg-blue-100 dark:bg-blue-900/30' : ''
                       }`}
                     >
-                      <p className="font-semibold text-gray-800">{student.name}</p>
-                      <p className="text-sm text-gray-600">{student.email}</p>
+                      <p className="font-semibold text-gray-900 dark:text-white">{student.name}</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">{student.email}</p>
                     </div>
                   ))}
                 </div>
@@ -212,49 +256,51 @@ export default function MentorDashboard() {
 
             <div className="lg:col-span-2">
               {selectedStudent ? (
-                <div className="bg-white rounded-lg shadow">
-                  <div className="p-6 border-b border-gray-200">
-                    <h2 className="text-xl font-bold text-gray-800">{selectedStudent.name}</h2>
-                    <p className="text-gray-600">{selectedStudent.email}</p>
+                <div className="bg-white dark:bg-gray-800 rounded-xl shadow transition-colors duration-300">
+                  <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+                    <h2 className="text-xl font-bold text-gray-900 dark:text-white">{selectedStudent.name}</h2>
+                    <p className="text-gray-500 dark:text-gray-400">{selectedStudent.email}</p>
                   </div>
 
                   <div className="p-6">
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                    {/* Mini week grid */}
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8 animate-fade-in-stagger">
                       {[1, 2, 3, 4, 5, 6, 7, 8].map((week) => (
                         <div
                           key={week}
-                          className={`p-4 rounded-lg text-center border-2 ${
+                          className={`p-4 rounded-xl text-center border-2 transition-all duration-300 ${
                             studentSubmissions[week]
-                              ? 'bg-green-50 border-green-500'
-                              : 'bg-gray-50 border-gray-300'
+                              ? 'bg-green-50 dark:bg-green-900/20 border-green-500 dark:border-green-600'
+                              : 'bg-gray-50 dark:bg-gray-700 border-gray-300 dark:border-gray-600'
                           }`}
                         >
-                          <p className="font-bold text-gray-800">Week {week}</p>
+                          <p className="font-bold text-gray-900 dark:text-white">Week {week}</p>
                           {studentSubmissions[week] ? (
-                            <p className="text-green-600 text-sm font-semibold">✓</p>
+                            <p className="text-green-600 dark:text-green-400 text-sm font-semibold">✓</p>
                           ) : (
-                            <p className="text-gray-400 text-sm">-</p>
+                            <p className="text-gray-400 dark:text-gray-500 text-sm">-</p>
                           )}
                         </div>
                       ))}
                     </div>
 
+                    {/* Submission details */}
                     <div className="space-y-4">
                       {[1, 2, 3, 4, 5, 6, 7, 8].map((week) => {
                         const sub = studentSubmissions[week]
                         return (
                           <div
                             key={week}
-                            className={`p-4 rounded-lg border ${
+                            className={`p-4 rounded-xl border transition-colors duration-300 ${
                               sub
-                                ? 'bg-green-50 border-green-200'
-                                : 'bg-gray-50 border-gray-200'
+                                ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
+                                : 'bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600'
                             }`}
                           >
                             <div className="flex justify-between items-start mb-3">
-                              <h3 className="font-bold text-gray-800">Week {week}</h3>
+                              <h3 className="font-bold text-gray-900 dark:text-white">Week {week}</h3>
                               {sub && (
-                                <span className="text-xs text-gray-600">
+                                <span className="text-xs text-gray-500 dark:text-gray-400">
                                   {new Date(sub.submitted_at).toLocaleDateString()}
                                 </span>
                               )}
@@ -264,10 +310,10 @@ export default function MentorDashboard() {
                               <div className="space-y-2">
                                 {sub.file_name && (
                                   <div>
-                                    <p className="text-sm text-gray-700 font-semibold">File: {sub.file_name}</p>
+                                    <p className="text-sm text-gray-700 dark:text-gray-300 font-semibold">File: {sub.file_name}</p>
                                     <button
                                       onClick={() => downloadFile(sub.file_url)}
-                                      className="text-sm bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded mt-1"
+                                      className="text-sm bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded mt-1 transition-all duration-200"
                                     >
                                       Download
                                     </button>
@@ -275,15 +321,15 @@ export default function MentorDashboard() {
                                 )}
                                 {sub.reflection_text && (
                                   <div>
-                                    <p className="text-sm text-gray-700 font-semibold">Reflection:</p>
-                                    <p className="text-sm text-gray-700 bg-white p-2 rounded border border-gray-300 mt-1">
+                                    <p className="text-sm text-gray-700 dark:text-gray-300 font-semibold">Reflection:</p>
+                                    <p className="text-sm text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 p-2 rounded border border-gray-300 dark:border-gray-600 mt-1 transition-colors duration-300">
                                       {sub.reflection_text}
                                     </p>
                                   </div>
                                 )}
                               </div>
                             ) : (
-                              <p className="text-sm text-gray-600">Not submitted</p>
+                              <p className="text-sm text-gray-500 dark:text-gray-400">Not submitted</p>
                             )}
                           </div>
                         )
@@ -292,8 +338,8 @@ export default function MentorDashboard() {
                   </div>
                 </div>
               ) : (
-                <div className="bg-white rounded-lg shadow p-12 text-center">
-                  <p className="text-gray-600 text-lg">Select a student to view submissions</p>
+                <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-12 text-center transition-colors duration-300">
+                  <p className="text-gray-500 dark:text-gray-400 text-lg">Select a student to view submissions</p>
                 </div>
               )}
             </div>
