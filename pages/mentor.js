@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase'
 import DarkModeToggle from '../components/DarkModeToggle'
 import Analytics from '../components/Analytics'
 import MentorContent from '../components/MentorContent'
+import NotificationBell from '../components/NotificationBell'
 import { useToast } from '../components/Toast'
 
 export default function MentorDashboard() {
@@ -178,6 +179,7 @@ export default function MentorDashboard() {
             <p className="text-gray-500 dark:text-gray-400">Mentor Dashboard · Multi-Echelon Optimization</p>
           </div>
           <div className="flex items-center gap-4">
+            <NotificationBell students={students} allSubmissions={allSubmissions} />
             <DarkModeToggle />
             <button
               onClick={handleLogout}

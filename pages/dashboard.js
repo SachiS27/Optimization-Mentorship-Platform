@@ -369,6 +369,9 @@ export default function Dashboard() {
           </div>
         )}
 
+        {/* ─── Your Submissions ─── */}
+        <h2 className="text-lg font-bold text-gray-900 dark:text-white">📝 Your Submissions</h2>
+
         {/* ─── Week Cards Grid ─── */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 animate-fade-in-stagger">
           {[1, 2, 3, 4, 5, 6, 7, 8].map(week => (
