@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/router'
 import { supabase } from '../lib/supabase'
-import { isSubmissionViewed } from '../lib/notifications'
+import { getDbViewedSubmissions } from '../lib/notifications'
 import DarkModeToggle from '../components/DarkModeToggle'
 import Analytics from '../components/Analytics'
 import MentorContent from '../components/MentorContent'
@@ -20,25 +20,36 @@ export default function MentorDashboard() {
   const [feedbackDrafts, setFeedbackDrafts] = useState({})
   const [loading, setLoading] = useState(false)
   const [view, setView] = useState('summary')
+  const [viewedSet, setViewedSet] = useState(new Set())
+  const [mentorId, setMentorId] = useState(null)
 
   useEffect(() => {
     const userRole = localStorage.getItem('user_role')
+    const userId = localStorage.getItem('user_id')
     if (userRole !== 'mentor') {
       router.push('/')
       return
     }
 
+    setMentorId(userId)
     fetchAllData()
+    loadViewed(userId)
 
     // Auto-refresh every 30 seconds to detect new submissions
     const interval = setInterval(() => {
       fetchAllData(true)
+      loadViewed(userId)
     }, 30000)
 
     return () => clearInterval(interval)
   }, [router])
 
   const mentorName = typeof window !== 'undefined' ? localStorage.getItem('user_name') || 'Mentor' : 'Mentor'
+
+  const loadViewed = async (mId) => {
+    const viewed = await getDbViewedSubmissions(mId)
+    setViewedSet(viewed)
+  }
 
   const fetchAllData = async (isRefresh = false) => {
     try {
@@ -187,7 +198,7 @@ export default function MentorDashboard() {
             <p className="text-gray-500 dark:text-gray-400">Mentor Dashboard · Multi-Echelon Optimization</p>
           </div>
           <div className="flex items-center gap-4">
-            <NotificationBell students={students} allSubmissions={allSubmissions} />
+            <NotificationBell mentorId={mentorId} students={students} allSubmissions={allSubmissions} onViewedChange={() => loadViewed(mentorId)} />
             <DarkModeToggle />
             <button
               onClick={handleLogout}
@@ -285,7 +296,7 @@ export default function MentorDashboard() {
                         <td key={week} className="px-4 py-4 text-center">
                           {submissions[week] ? (
                             <span className="relative inline-flex items-center">
-                              {!isSubmissionViewed(student.id, week) && (
+                              {!viewedSet.has(`${student.id}_w${week}`) && (
                                 <span className="absolute -top-2 -left-2 w-2 h-2 bg-blue-500 rounded-full"></span>
                               )}
                               <span className="text-green-600 dark:text-green-400 font-bold">✓</span>

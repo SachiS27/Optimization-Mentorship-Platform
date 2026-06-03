@@ -1,24 +1,24 @@
 import { useState, useEffect, useRef } from 'react'
+import { getDbViewedSubmissions, markAllSubmissionsViewed } from '../lib/notifications'
 
-export default function NotificationBell({ students, allSubmissions }) {
+export default function NotificationBell({ mentorId, students, allSubmissions, onViewedChange }) {
   const [open, setOpen] = useState(false)
-  const [viewedIds, setViewedIds] = useState(new Set())
+  const [viewedSet, setViewedSet] = useState(new Set())
   const [notifications, setNotifications] = useState([])
+  const [loading, setLoading] = useState(false)
   const ref = useRef(null)
 
-  // Load viewed submission IDs from localStorage
-  useEffect(() => {
-    try {
-      const stored = localStorage.getItem('viewed_submissions')
-      if (stored) {
-        setViewedIds(new Set(JSON.parse(stored)))
-      }
-    } catch (e) {
-      console.error('Error loading viewed submissions:', e)
-    }
-  }, [])
+  // Fetch viewed submissions from database
+  const loadViewed = async () => {
+    const viewed = await getDbViewedSubmissions(mentorId)
+    setViewedSet(viewed)
+  }
 
-  // Build notification list from unviewed submissions
+  useEffect(() => {
+    if (mentorId) loadViewed()
+  }, [mentorId])
+
+  // Build notification list whenever data changes
   useEffect(() => {
     if (!students.length) return
 
@@ -26,10 +26,10 @@ export default function NotificationBell({ students, allSubmissions }) {
     students.forEach((student) => {
       const subs = allSubmissions[student.id] || {}
       Object.values(subs).forEach((sub) => {
-        const subKey = `${student.id}_w${sub.week_number}`
-        if (!viewedIds.has(subKey)) {
+        const key = `${student.id}_w${sub.week_number}`
+        if (!viewedSet.has(key)) {
           notifs.push({
-            key: subKey,
+            key,
             studentName: student.name,
             week: sub.week_number,
             time: new Date(sub.submitted_at),
@@ -38,10 +38,9 @@ export default function NotificationBell({ students, allSubmissions }) {
       })
     })
 
-    // Sort newest first
     notifs.sort((a, b) => b.time - a.time)
     setNotifications(notifs)
-  }, [students, allSubmissions, viewedIds])
+  }, [students, allSubmissions, viewedSet])
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -54,18 +53,13 @@ export default function NotificationBell({ students, allSubmissions }) {
     return () => document.removeEventListener('mousedown', handleClick)
   }, [])
 
-  const handleMarkRead = () => {
-    // Mark ALL current submissions as viewed
-    const newViewed = new Set(viewedIds)
-    students.forEach((student) => {
-      const subs = allSubmissions[student.id] || {}
-      Object.keys(subs).forEach((weekNum) => {
-        newViewed.add(`${student.id}_w${weekNum}`)
-      })
-    })
-    setViewedIds(newViewed)
-    localStorage.setItem('viewed_submissions', JSON.stringify([...newViewed]))
+  const handleMarkRead = async () => {
+    setLoading(true)
+    await markAllSubmissionsViewed(mentorId, students, allSubmissions)
+    await loadViewed()
+    if (onViewedChange) onViewedChange()
     setOpen(false)
+    setLoading(false)
   }
 
   const formatTime = (date) => {
@@ -104,9 +98,10 @@ export default function NotificationBell({ students, allSubmissions }) {
             {unreadCount > 0 && (
               <button
                 onClick={handleMarkRead}
-                className="text-xs text-blue-600 dark:text-blue-400 hover:underline font-semibold"
+                disabled={loading}
+                className="text-xs text-blue-600 dark:text-blue-400 hover:underline font-semibold disabled:opacity-50"
               >
-                Mark all read
+                {loading ? 'Saving...' : 'Mark all read'}
               </button>
             )}
           </div>
@@ -140,4 +135,10 @@ export default function NotificationBell({ students, allSubmissions }) {
       )}
     </div>
   )
+}
+
+// Export for Summary View table dots
+export function useViewedSet() {
+  const [viewedSet, setViewedSet] = useState(new Set())
+  return { viewedSet, setViewedSet }
 }
